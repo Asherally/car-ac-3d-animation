@@ -3,526 +3,284 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>新能源汽车空调系统故障诊断 · 3D 交互动画</title>
+<title>新能源汽车空调系统故障诊断 · 作品提交</title>
 <style>
   :root{
-    --bg:#0b1220; --panel:rgba(18,26,42,.92); --line:#243047;
+    --bg:#0b1220; --panel:#111a2c; --line:#243047; --line2:#2c3b58;
     --red:#ff6b4a; --blue:#48b5ff; --green:#38d19b; --amber:#ffb547;
-    --txt:#dbe6f5; --dim:#8ba0bd;
+    --txt:#dbe6f5; --dim:#8ba0bd; --white:#fff;
   }
   *{box-sizing:border-box;}
-  html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);
-    font-family:"Microsoft YaHei","PingFang SC",sans-serif;color:var(--txt);}
-  #c{position:fixed;inset:0;display:block;}
-  canvas{display:block;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
+    font-family:"Microsoft YaHei","PingFang SC",sans-serif;}
+  a{color:var(--blue);text-decoration:none;}
 
-  .hud{position:fixed;z-index:10;pointer-events:none;}
-  #title{top:16px;left:20px;}
-  #title h1{margin:0;font-size:20px;font-weight:700;letter-spacing:.5px;}
-  #title p{margin:4px 0 0;font-size:12px;color:var(--dim);}
+  /* ---------- 顶部三按键 ---------- */
+  #modebar{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:99;
+    display:flex;gap:8px;background:rgba(13,20,34,.92);border:1px solid var(--line);
+    padding:6px;border-radius:14px;box-shadow:0 6px 24px rgba(0,0,0,.5);}
+  .mbtn{background:transparent;border:1px solid transparent;color:var(--txt);
+    padding:10px 16px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;
+    font-family:inherit;transition:.18s;white-space:nowrap;}
+  .mbtn:hover{background:rgba(34,46,70,.7);}
+  .mbtn.active{background:linear-gradient(180deg,#1f3a6b,#183052);border-color:var(--blue);
+    color:#fff;box-shadow:0 0 0 1px rgba(72,181,255,.3) inset;}
+  .mbtn .n{color:var(--amber);margin-right:4px;font-weight:700;}
 
-  #legend{top:16px;right:20px;background:var(--panel);border:1px solid var(--line);
-    border-radius:12px;padding:12px 14px;pointer-events:auto;font-size:12px;line-height:1.9;}
-  #legend .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:7px;vertical-align:-1px;}
-  #legend b{color:#fff;font-size:12.5px;}
+  /* ---------- 视图容器 ---------- */
+  .view{position:fixed;inset:0;display:none;}
+  .view.active{display:block;}
+  #view-process,#view-circuit{overflow-y:auto;background:
+    radial-gradient(1200px 600px at 20% -10%, #122036 0%, var(--bg) 55%);}
+  #view-anim iframe{width:100%;height:100%;border:0;display:block;background:var(--bg);}
 
-  #controls{bottom:18px;left:20px;right:20px;display:flex;gap:8px;flex-wrap:wrap;
-    justify-content:center;pointer-events:auto;}
-  .btn{background:rgba(24,34,54,.9);border:1px solid var(--line);color:var(--txt);
-    padding:9px 13px;border-radius:9px;font-size:13px;cursor:pointer;
-    font-family:inherit;transition:.18s;}
-  .btn:hover{border-color:#4a5a7a;background:rgba(34,46,70,.95);}
-  .btn.active{background:linear-gradient(180deg,#1f3a6b,#183052);border-color:var(--blue);color:#fff;box-shadow:0 0 0 1px rgba(72,181,255,.3) inset;}
+  .wrap{max-width:960px;margin:0 auto;padding:86px 24px 80px;}
 
-  #panel{left:20px;top:86px;width:min(360px,calc(100vw - 40px));background:var(--panel);
-    border:1px solid var(--line);border-radius:14px;padding:16px 18px;pointer-events:auto;}
-  #panel .tag{display:inline-block;font-size:11px;padding:2px 9px;border-radius:20px;
-    background:rgba(72,181,255,.15);color:var(--blue);border:1px solid rgba(72,181,255,.4);margin-bottom:8px;}
-  #panel h2{margin:0 0 8px;font-size:17px;color:#fff;}
-  #panel .row{margin:6px 0 0;font-size:12.5px;color:var(--txt);line-height:1.65;}
-  #panel .row b{color:var(--amber);font-weight:600;}
-  #panel .row .k{color:var(--green);}
-  #panel .div{margin-top:10px;padding-top:9px;border-top:1px dashed var(--line);font-size:11.5px;color:var(--dim);}
+  /* ---------- 通用排版 ---------- */
+  .doc-head{margin-bottom:18px;}
+  .doc-head .kicker{display:inline-block;font-size:12px;letter-spacing:1px;
+    color:var(--green);border:1px solid rgba(56,209,155,.4);background:rgba(56,209,155,.1);
+    padding:3px 10px;border-radius:20px;margin-bottom:10px;}
+  .doc-head h1{margin:0;font-size:26px;color:var(--white);letter-spacing:.5px;}
+  .doc-head p{margin:8px 0 0;font-size:14px;color:var(--dim);line-height:1.7;}
 
-  #tip{position:fixed;bottom:76px;left:50%;transform:translateX(-50%);font-size:11.5px;
-    color:var(--dim);pointer-events:none;}
-  @media(max-width:640px){ #panel{top:76px;} #legend{display:none;} }
+  .sec{margin:28px 0 0;}
+  .sec h2{font-size:19px;color:var(--white);margin:0 0 12px;padding-left:11px;
+    border-left:3px solid var(--blue);line-height:1.3;}
+  .sec h3{font-size:15.5px;color:var(--amber);margin:18px 0 8px;}
+  .sec p{font-size:14.5px;line-height:1.85;color:var(--txt);margin:8px 0;}
+  .sec ul,.sec ol{margin:8px 0;padding-left:22px;}
+  .sec li{font-size:14.5px;line-height:1.85;margin:6px 0;color:var(--txt);}
+  .sec li b{color:var(--white);}
+  .hl{color:var(--amber);font-weight:600;}
+  .ok{color:var(--green);font-weight:600;}
+  .bad{color:var(--red);font-weight:600;}
+
+  /* 卡片 */
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:18px 20px;margin:16px 0;}
+  .card h4{margin:0 0 10px;font-size:15px;color:var(--white);}
+  .card .step{display:flex;gap:12px;margin:14px 0;}
+  .card .num{flex:0 0 30px;height:30px;border-radius:8px;display:flex;align-items:center;
+    justify-content:center;background:linear-gradient(180deg,#1f3a6b,#183052);
+    color:var(--white);font-weight:700;font-size:14px;border:1px solid var(--blue);}
+  .card .body{flex:1;font-size:14px;line-height:1.8;}
+  .card .body b{color:var(--white);}
+
+  /* 表格 */
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px;
+    background:var(--panel);border-radius:10px;overflow:hidden;}
+  th,td{padding:10px 12px;border:1px solid var(--line);text-align:left;line-height:1.6;}
+  th{background:#1f3864;color:var(--white);font-weight:600;white-space:nowrap;}
+  td{color:var(--txt);}
+  tr:nth-child(even) td{background:rgba(255,255,255,.02);}
+  .v{font-variant-numeric:tabular-nums;color:var(--white);}
+
+  /* 电路图 */
+  .fig{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:18px;margin:18px 0;}
+  .fig img{width:100%;height:auto;border-radius:8px;display:block;
+    border:1px solid var(--line2);background:#0d1626;}
+  .fig figcaption{margin-top:12px;font-size:13.5px;line-height:1.75;color:var(--txt);}
+  .fig figcaption .ft{color:var(--white);font-weight:700;}
+
+  /* 故障点标注 */
+  .fp{display:flex;gap:10px;margin:8px 0;font-size:13.5px;align-items:flex-start;line-height:1.6;}
+  .fp .pin{flex:0 0 14px;height:14px;border-radius:50%;margin-top:4px;border:2px solid rgba(255,255,255,.5);}
+  .fp .pin.r{background:var(--red);}
+  .fp .pin.o{background:var(--amber);}
+
+  .conclude{border-left:3px solid var(--green);background:rgba(56,209,155,.06);
+    padding:16px 18px;border-radius:0 12px 12px 0;margin:16px 0;}
+  .conclude p{font-size:14.5px;line-height:1.85;margin:6px 0;}
+
+  @media(max-width:560px){
+    .mbtn{padding:8px 10px;font-size:12.5px;}
+    .wrap{padding:80px 16px 60px;}
+    .doc-head h1{font-size:22px;}
+    th,td{padding:8px;font-size:12.5px;}
+  }
 </style>
 </head>
 <body>
-<div id="c"></div>
 
-<div class="hud" id="title">
-  <h1>新能源汽车空调系统 · 故障诊断 3D 动画</h1>
-  <p>拖拽旋转 · 滚轮缩放 · 点击下方按钮切换故障场景</p>
-</div>
+<!-- 三按键切换栏 -->
+<nav id="modebar">
+  <button class="mbtn active" data-view="process"><span class="n">①</span>故障排查流程</button>
+  <button class="mbtn" data-view="circuit"><span class="n">②</span>电路图与原理分析</button>
+  <button class="mbtn" data-view="anim"><span class="n">③</span>动画演示</button>
+</nav>
 
-<div class="hud" id="legend">
-  <b>图例</b><br>
-  <span class="dot" style="background:var(--red)"></span>高压侧管路（高温高压）<br>
-  <span class="dot" style="background:var(--blue)"></span>低压侧管路（低温低压）<br>
-  <span class="dot" style="background:#9fd0ff"></span>流动粒子 = 制冷剂流向<br>
-  <span class="dot" style="background:var(--amber)"></span>PTC 电加热器（制热）
-</div>
+<!-- ================= 功能一：故障排查流程 ================= -->
+<section id="view-process" class="view active">
+  <div class="wrap">
+    <div class="doc-head">
+      <span class="kicker">功能一 · 文字说明</span>
+      <h1>新能源汽车空调系统 · 故障排查流程</h1>
+      <p>本部分以文字形式完整记录从「明确故障」到「书写结论」的标准排查步骤，覆盖故障范围界定、故障码读取、测量数据留存与结果书写四个环节。</p>
+    </div>
 
-<div class="hud" id="panel">
-  <span class="tag" id="tag">正常工作</span>
-  <h2 id="infoTitle">系统正常运行</h2>
-  <div id="infoBody"></div>
-  <div class="div" id="animNote"></div>
-</div>
+    <div class="sec">
+      <h2>步骤 1 · 明确故障范围与成因</h2>
+      <div class="card">
+        <div class="step">
+          <div class="num">1</div>
+          <div class="body"><b>确认故障现象：</b>首先向驾驶员了解故障发生的时间、频次与条件（是否高速、是否高温、是否充电后出现）。判断属于<b class="hl">不制冷</b>、<b class="hl">不制热</b>还是<b class="hl">间歇性故障</b>。</div>
+        </div>
+        <div class="step">
+          <div class="num">2</div>
+          <div class="body"><b>区分系统边界：</b>制冷失效优先指向<b>制冷剂回路 + 电动压缩机</b>；制热失效优先指向<b>PTC 加热回路</b>；两者同时失效多指向<b>高压供电 / 高压互锁 / 整车控制</b>公共环节。</div>
+        </div>
+        <div class="step">
+          <div class="num">3</div>
+          <div class="body"><b>确定排查方向：</b>依据现象把故障收敛到「电控类」或「机械/冷媒类」两类，避免盲目拆装。例如风量正常但不够凉，属于制冷剂或压缩机问题；开暖风不热则锁定 PTC。</div>
+        </div>
+      </div>
+    </div>
 
-<div class="hud" id="controls"></div>
-<div class="hud" id="tip">粒子颜色随时间在红/蓝两端切换，代表制冷剂在蒸发器两侧的相态变化</div>
+    <div class="sec">
+      <h2>步骤 2 · 读取故障码、留存测量数据</h2>
+      <div class="card">
+        <div class="step">
+          <div class="num">1</div>
+          <div class="body"><b>连接诊断仪读取 DTC：</b>空调系统典型故障码包括 <span class="v">B14200</span>（压缩机控制/通信类）、<span class="v">P1A6000</span>（高压互锁回路）。读取后先<b class="hl">清除并复现</b>，确认是否为当前故障。</div>
+        </div>
+        <div class="step">
+          <div class="num">2</div>
+          <div class="body"><b>留存冻结帧数据：</b>记录故障发生瞬间的高压母线电压、压缩机目标转速 vs 实际转速、环境温度、蒸发器温度等<b>冻结帧（Freeze Frame）</b>，用于事后因果分析。</div>
+        </div>
+        <div class="step">
+          <div class="num">3</div>
+          <div class="body"><b>留存测量数据：</b>将歧管压力表读数、万用表/电流钳读数按规范填入测量记录表（参见下方表格），做到<b>每一个数据都有测量点、仪表、单位与判定</b>。</div>
+        </div>
+      </div>
+    </div>
 
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-  }
-}
-</script>
+    <div class="sec">
+      <h2>步骤 3 · 测量电路与电压</h2>
+      <p>使用<span class="hl">数字万用表、电流钳、绝缘电阻表、歧管压力表组</span>，按以下项目逐项测量并记录：</p>
+      <div class="card">
+        <table>
+          <thead>
+            <tr><th style="width:22%">检测项目</th><th style="width:30%">检测点</th><th style="width:16%">参考值</th><th style="width:16%">实测值(示例)</th><th style="width:16%">判定</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>高压管路压力</td><td>高压检修阀</td><td class="v">14 ~ 16 bar</td><td class="v">9.2 bar</td><td class="bad">偏低</td></tr>
+            <tr><td>低压管路压力</td><td>低压检修阀</td><td class="v">2.0 ~ 2.5 bar</td><td class="v">3.8 bar</td><td class="bad">偏高</td></tr>
+            <tr><td>高压母线电压</td><td>压缩机高压插接件</td><td class="v">350 ~ 400 V</td><td class="v">372 V</td><td class="ok">正常</td></tr>
+            <tr><td>中心线(中性点)电压</td><td>压缩机三相端中心点</td><td class="v">≈ 母线/2</td><td class="v">—(不平衡)</td><td class="bad">异常</td></tr>
+            <tr><td>压缩机三相电流</td><td>相线(电流钳)</td><td class="v">三相均衡</td><td class="v">U相偏大</td><td class="bad">不平衡</td></tr>
+            <tr><td>PTC 加热器电阻</td><td>PTC 插头两端</td><td class="v">1 ~ 5 Ω</td><td class="v">3.1 Ω</td><td class="ok">正常</td></tr>
+            <tr><td>互锁回路电阻</td><td>HVIL 监测端</td><td class="v">&lt; 1 Ω</td><td class="v">0.3 Ω</td><td class="ok">正常</td></tr>
+            <tr><td>传感器 5V 参考</td><td>压力传感器 1 脚</td><td class="v">4.9 ~ 5.1 V</td><td class="v">5.02 V</td><td class="ok">正常</td></tr>
+            <tr><td>CAN 网络电阻</td><td>OBD 6/14 引脚</td><td class="v">≈ 60 Ω</td><td class="v">61 Ω</td><td class="ok">正常</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><b>中心线电压说明：</b>电动压缩机内部为三相电机，其三相绕组中性点（中心线）电压应约等于母线电压的一半且稳定。若出现<b class="hl">三相不平衡</b>，说明电机绕组存在匝间短路、断路或不同程度匝间绝缘劣化，是判断<b class="bad">电机损坏</b>的关键依据。</p>
+    </div>
 
-<script type="module">
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    <div class="sec">
+      <h2>步骤 4 · 结果书写清晰</h2>
+      <div class="card">
+        <div class="step"><div class="num">1</div><div class="body">每个测量值必须标注<b>测量点、使用仪表、单位、实测值、参考值、判定结论</b>六要素，禁止只写"正常/不正常"；</div></div>
+        <div class="step"><div class="num">2</div><div class="body">结论采用<b class="hl">「现象 → 数据 → 判断 → 原因」</b>的因果链条书写，让复核人员无需现场即可复现推理；</div></div>
+        <div class="step"><div class="num">3</div><div class="body">对异常数据用<span class="ok">绿色</span>标正常、<span class="bad">红色</span>标异常，并附一句说明（如上表所示）。</div></div>
+      </div>
+    </div>
+  </div>
+</section>
 
-const RED = 0xff6b4a, BLUE = 0x48b5ff, GREEN = 0x38d19b, AMBER = 0xffb547;
-const HL = 0xff6b4a, LL = 0x48b5ff;
+<!-- ================= 功能二：电路图与原理分析 ================= -->
+<section id="view-circuit" class="view">
+  <div class="wrap">
+    <div class="doc-head">
+      <span class="kicker">功能二 · 电路图 + 文字说明</span>
+      <h1>电路查阅 · 故障点标注 · 原理分析</h1>
+      <p>本部分查阅并绘制空调系统关键电路，标注故障点位置（<span class="bad">线路断裂</span>、<span class="hl">电机损坏</span>），并给出故障排除结果、最终原因与失效原理。</p>
+    </div>
 
-// ---------- 基础场景 ----------
-const container = document.getElementById('c');
-const renderer = new THREE.WebGLRenderer({ antialias:true });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-renderer.setSize(innerWidth, innerHeight);
-container.appendChild(renderer.domElement);
+    <div class="sec">
+      <h2>一、电路资料查阅</h2>
+      <p>本次查阅该车型空调系统的 5 张关联电路图：<b>①压缩机驱动电路、②PTC 加热电路、③高压互锁回路、④传感器电路、⑤控制与通信电路</b>。唤醒/控制逻辑、熔断器与继电器编号、插接件针脚以维修手册对应章节为准。</p>
+    </div>
 
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0b1220);
-scene.fog = new THREE.Fog(0x0b1220, 14, 34);
+    <div class="sec">
+      <h2>二、电路图绘制与故障点标注</h2>
 
-const camera = new THREE.PerspectiveCamera(50, innerWidth/innerHeight, 0.1, 100);
-camera.position.set(7.5, 6.5, 9.5);
+      <figure class="fig">
+        <img src="images/sch1_compressor.png" alt="压缩机驱动电路">
+        <figcaption><span class="ft">图 1 · 压缩机驱动电路。</span>动力电池高压直流经熔断器 FU、主接触器 KM 进入三相逆变桥，逆变为三相交流驱动压缩机电机；控制板通过 CAN_H/CAN_L 与整车控制器通信。<br>
+        <span class="fp"><span class="pin r"></span><span><b class="bad">故障点 A — 线路断裂：</b>三相逆变桥输出相线、CAN 通信线一旦断裂，会导致缺相、通信丢失，控制器报码停机。</span></span>
+        <span class="fp"><span class="pin o"></span><span><b class="hl">故障点 B — 电机损坏：</b>压缩机电机绕组匝间短路/断路（标注于电机符号处），三相电流不平衡，触发过流保护。</span></span></figcaption>
+      </figure>
 
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.target.set(0, 0.6, 0);
-controls.enableDamping = true;
-controls.dampingFactor = 0.08;
-controls.autoRotate = true;
-controls.autoRotateSpeed = 0.55;
-controls.maxPolarAngle = Math.PI * 0.62;
-controls.minDistance = 5; controls.maxDistance = 22;
+      <figure class="fig">
+        <img src="images/sch2_ptc.png" alt="PTC 加热电路">
+        <figcaption><span class="ft">图 2 · PTC 加热电路。</span>保险丝 + 双继电器（K1/K2）冗余控制，为 PTC 发热体供电，实现制热。<br>
+        <span class="fp"><span class="pin r"></span><span><b class="bad">线路断裂/熔断：</b>保险丝熔断、PTC 供电线路断裂或继电器触点烧蚀，均会使 PTC 无法得电。</span></span>
+        <span class="fp"><span class="pin o"></span><span><b class="hl">部件损坏：</b>PTC 发热体本体断路或短路（正常电阻 1~5 Ω）。</span></span></figcaption>
+      </figure>
 
-scene.add(new THREE.AmbientLight(0x8fa6c8, 1.15));
-const sun = new THREE.DirectionalLight(0xffffff, 1.6);
-sun.position.set(8, 12, 6);
-scene.add(sun);
-const rim = new THREE.DirectionalLight(0x6f9dff, 0.6);
-rim.position.set(-6, 3, -4);
-scene.add(rim);
+      <figure class="fig">
+        <img src="images/sch3_hvil.png" alt="高压互锁回路">
+        <figcaption><span class="ft">图 3 · 高压互锁回路。</span>各高压接插件（电池/压缩机/PTC/电机）的互锁线串联成回路，任一点断开即整车禁止高压输出。<br>
+        <span class="fp"><span class="pin r"></span><span><b class="bad">故障点 A — 线路断裂：</b>任一高压接插件松动、脱落或互锁线断裂，回路开路（电阻无穷大，正常 &lt;1 Ω）。</span></span></figcaption>
+      </figure>
 
-// 地面
-const floor = new THREE.Mesh(
-  new THREE.PlaneGeometry(40, 40),
-  new THREE.MeshStandardMaterial({ color:0x0e1626, roughness:0.95, metalness:0.05 })
-);
-floor.rotation.x = -Math.PI/2; floor.position.y = -0.42;
-scene.add(floor);
-const grid = new THREE.GridHelper(40, 40, 0x1c2940, 0x141e30);
-grid.position.y = -0.41;
-scene.add(grid);
+      <figure class="fig">
+        <img src="images/sch4_sensor.png" alt="传感器电路">
+        <figcaption><span class="ft">图 4 · 传感器电路。</span>三线制制冷剂压力传感器（5V 参考/信号/地）+ 蒸发器温度传感器（NTC），控制器内部上拉采样。<br>
+        <span class="fp"><span class="pin r"></span><span><b class="bad">故障点 A — 线路断裂：</b>信号线断裂或地线虚接，导致信号电压异常，压缩机频繁启停或不停机。</span></span></figcaption>
+      </figure>
 
-// ---------- 材质 ----------
-const metal = new THREE.MeshStandardMaterial({ color:0x7a8799, roughness:0.45, metalness:0.7 });
-const darkMetal = new THREE.MeshStandardMaterial({ color:0x39424f, roughness:0.5, metalness:0.7 });
-const compMat = new THREE.MeshStandardMaterial({ color:0x8b98a8, roughness:0.4, metalness:0.75 });
-const finMat = new THREE.MeshStandardMaterial({ color:0x6f7f93, roughness:0.55, metalness:0.55, emissive:0x000000, emissiveIntensity:0 });
-const ptcMat = new THREE.MeshStandardMaterial({ color:0x5a4a3a, roughness:0.6, metalness:0.2, emissive:AMBER, emissiveIntensity:0.55 });
-const battMat = new THREE.MeshStandardMaterial({ color:0x333d4c, roughness:0.6, metalness:0.4 });
+      <figure class="fig">
+        <img src="images/sch5_control.png" alt="控制与通信电路">
+        <figcaption><span class="ft">图 5 · 控制与通信电路。</span>CAN 总线、控制单元与执行器之间的控制线路，实现整车对压缩机的转速指令与状态反馈。<br>
+        <span class="fp"><span class="pin r"></span><span><b class="bad">故障点 A — 线路断裂：</b>CAN_H/CAN_L 断裂或控制线路开路，导致通信丢失（如 B14200），压缩机无法启动。</span></span></figcaption>
+      </figure>
+    </div>
 
-// ---------- 回路关键点 ----------
-const P = [
-  new THREE.Vector3(-3.0, 0.9,  0.0), // P0 压缩机
-  new THREE.Vector3(-0.5, 0.9, -3.5), // P1 冷凝器入口
-  new THREE.Vector3( 2.0, 0.9, -3.5), // P2 冷凝器出口
-  new THREE.Vector3( 2.8, 0.9,  0.0), // P3 膨胀阀
-  new THREE.Vector3( 2.5, 0.9,  2.8), // P4 蒸发器入口
-  new THREE.Vector3(-0.5, 0.9,  2.8), // P5 蒸发器出口
-];
-const N = P.length;
-const SEG_COLOR = [HL, HL, HL, LL, LL, LL]; // 0-2 高压，3-5 低压
+    <div class="sec">
+      <h2>三、故障排除结果</h2>
+      <div class="card">
+        <p>依据数据判定，本例故障定位为：<b class="hl">压缩机电机绕组匝间短路</b>（高压、低压压力异常 + 三相电流不平衡 + 中心线电压失衡），并伴有<span class="bad">三相逆变桥输出相线插头端子烧蚀松脱</span>（相当于线路断裂）。</p>
+        <p>修复措施：更换同型号电动压缩机总成 → 修复/更换烧蚀端子与线束 → 对制冷剂回路抽真空保压、按铭牌定量加注 → 清除故障码并路试。<b class="ok">修复后系统恢复正常，故障码不再复现。</b></p>
+      </div>
+    </div>
 
-// ---------- 管路 ----------
-function pipeBetween(a, b, color, r=0.11){
-  const d = new THREE.Vector3().subVectors(b, a);
-  const len = d.length();
-  const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 18),
-    new THREE.MeshStandardMaterial({ color, roughness:0.35, metalness:0.55, emissive:color, emissiveIntensity:0.15 }));
-  m.position.copy(a).add(b).multiplyScalar(0.5);
-  m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), d.clone().normalize());
-  return m;
-}
-for(let i=0;i<N;i++){
-  const a = P[i], b = P[(i+1)%N];
-  scene.add(pipeBetween(a, b, SEG_COLOR[i]));
-}
-for(const pt of P){
-  const j = new THREE.Mesh(new THREE.SphereGeometry(0.14, 16, 12),
-    new THREE.MeshStandardMaterial({ color:0xdbe6f5, roughness:0.4, metalness:0.5 }));
-  j.position.copy(pt); scene.add(j);
-}
+    <div class="sec">
+      <h2>四、最终故障原因与原理分析</h2>
+      <div class="conclude">
+        <p><b class="hl">最终故障原因：</b>压缩机电机定子绕组匝间绝缘劣化，导致匝间短路；长期大电流使相线端子过热烧蚀、产生接触不良（局部断线）。</p>
+        <p><b class="hl">失效原理：</b></p>
+        <p>① <b>电机匝间短路</b> → 三相绕组阻抗不平衡 → 三相电流不均衡、中心线电压偏移；控制器检测到<b>过流/缺相</b>后进入保护，<b>停止压缩机输出</b> → 制冷剂不再循环，系统丧失制冷能力，表现为「高压偏低、低压偏高、完全/间歇不制冷」。</p>
+        <p>② <b>相线端子过热烧蚀</b> → 接触电阻增大 → 局部相当于<b>线路断裂</b> → 进一步加剧缺相与发热，与绕组短路互为因果，最终导致压缩机彻底停转。</p>
+        <p>③ 同理，若为<b>线路断裂型</b>故障（如互锁线断、CAN 线断、传感器信号线断），则是「信号/供电中断 → 保护停机或误判」这一失效链路，同样造成系统功能丧失。</p>
+      </div>
+    </div>
+  </div>
+</section>
 
-// ---------- 段长累计 ----------
-const segLen = [], cum = [0];
-let total = 0;
-for(let i=0;i<N;i++){
-  const l = P[i].distanceTo(P[(i+1)%N]);
-  segLen.push(l); total += l; cum.push(total);
-}
-function sampleLoop(s){ // s in [0,total)
-  s = ((s % total) + total) % total;
-  for(let i=0;i<N;i++){
-    if(s <= cum[i+1]){
-      const t = (s - cum[i]) / segLen[i];
-      const a = P[i], b = P[(i+1)%N];
-      return { pos: new THREE.Vector3().lerpVectors(a, b, t), seg:i };
+<!-- ================= 功能三：动画演示 ================= -->
+<section id="view-anim" class="view">
+  <iframe src="anim.html" title="新能源汽车空调系统 3D 动画" loading="eager"></iframe>
+</section>
+
+<script>
+  (function(){
+    var btns = document.querySelectorAll('.mbtn');
+    var views = document.querySelectorAll('.view');
+    function activate(name){
+      btns.forEach(function(b){ b.classList.toggle('active', b.dataset.view === name); });
+      views.forEach(function(v){ v.classList.remove('active'); });
+      var el = document.getElementById('view-' + name);
+      if(el) el.classList.add('active');
     }
-  }
-  return { pos: P[0].clone(), seg:0 };
-}
-function segColor(i){
-  return i>=3 ? new THREE.Color(LL) : new THREE.Color(HL);
-}
-
-// ---------- 冷媒粒子 ----------
-const N_P = 320;
-const posArr = new Float32Array(N_P*3);
-const colArr = new Float32Array(N_P*3);
-const pGeo = new THREE.BufferGeometry();
-pGeo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
-pGeo.setAttribute('color', new THREE.BufferAttribute(colArr, 3));
-const pMat = new THREE.PointsMaterial({ size:0.13, vertexColors:true, transparent:true, opacity:0.95, depthWrite:false, blending:THREE.AdditiveBlending });
-const particles = new THREE.Points(pGeo, pMat);
-scene.add(particles);
-
-const prog = new Float32Array(N_P);   // 每个粒子的里程 s
-const speedoff = new Float32Array(N_P);
-for(let i=0;i<N_P;i++){ prog[i] = Math.random()*total; speedoff[i] = 0.75 + Math.random()*0.5; }
-
-// 泄漏喷射粒子
-const LK = 120;
-const lkPos = new Float32Array(LK*3);
-const lkGeo = new THREE.BufferGeometry();
-lkGeo.setAttribute('position', new THREE.BufferAttribute(lkPos, 3));
-const lkMat = new THREE.PointsMaterial({ size:0.09, color:0xb8e6ff, transparent:true, opacity:0.7, depthWrite:false, blending:THREE.AdditiveBlending });
-const leak = new THREE.Points(lkGeo, lkMat);
-scene.add(leak);
-const lkVel = [];
-
-// ---------- 部件 ----------
-function finPanel(x, y, z, w, h, mat){
-  const g = new THREE.Group();
-  const frame = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.12), darkMetal);
-  g.add(frame);
-  const n = Math.floor(w/0.22);
-  for(let i=0;i<n;i++){
-    const fx = -w/2 + 0.12 + i*0.22;
-    const fin = new THREE.Mesh(new THREE.BoxGeometry(0.05, h*0.86, 0.16), mat);
-    fin.position.set(fx, 0, 0.02);
-    g.add(fin);
-  }
-  // 两根集流管
-  const hdr = new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.1,h,16), metal);
-  hdr.rotation.z = Math.PI/2; hdr.position.set(0, 0, 0.02); g.add(hdr);
-  g.position.set(x, y, z);
-  return g;
-}
-
-// 压缩机
-const comp = new THREE.Group();
-const compBody = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.6, 1.15, 28), compMat);
-compBody.position.y = 0.58; comp.add(compBody);
-comp.add(new THREE.Mesh(new THREE.CylinderGeometry(0.6,0.6,0.12,28), darkMetal)).position.y=1.18;
-const rotor = new THREE.Group();
-for(let i=0;i<6;i++){
-  const b = new THREE.Mesh(new THREE.BoxGeometry(0.16,0.28,0.5), new THREE.MeshStandardMaterial({color:0x232b36,metalness:0.5,roughness:0.5}));
-  const a = (i/6)*Math.PI*2;
-  b.position.set(Math.cos(a)*0.32, 0, Math.sin(a)*0.32);
-  b.lookAt(Math.cos(a)*2, 0, Math.sin(a)*2);
-  rotor.add(b);
-}
-rotor.position.y = 1.32; comp.add(rotor);
-comp.add(new THREE.Mesh(new THREE.SphereGeometry(0.18,16,12), darkMetal)).position.y=1.32;
-// 端口
-const port = (x,z)=> { const m = new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.1,0.4,14), darkMetal);
-  m.rotation.z=Math.PI/2; m.position.set(x,0.6,z); comp.add(m); };
-port(0.5,0.1); port(-0.5,-0.1);
-comp.position.set(-3.0, 0, 0);
-scene.add(comp);
-
-// 冷凝器（车头散热器）
-const condenser = finPanel(0.75, 0.9, -3.5, 2.5, 1.5, finMat);
-scene.add(condenser);
-const condMatRef = finMat;
-
-// 蒸发器
-const evapMat = new THREE.MeshStandardMaterial({ color:0x6f7f93, roughness:0.55, metalness:0.55 });
-const evaporator = finPanel(1.0, 0.9, 2.8, 2.0, 1.2, evapMat);
-scene.add(evaporator);
-
-// 膨胀阀
-const expv = new THREE.Group();
-const exBody = new THREE.Mesh(new THREE.BoxGeometry(0.45,0.45,0.45), metal);
-expv.add(exBody);
-expv.add(new THREE.Mesh(new THREE.CylinderGeometry(0.09,0.09,0.7,12), darkMetal)).rotation.z=Math.PI/2;
-expv.add(new THREE.Mesh(new THREE.CylinderGeometry(0.09,0.09,0.7,12), darkMetal)).rotation.x=Math.PI/2;
-expv.position.copy(P[3]);
-scene.add(expv);
-
-// PTC 加热器
-const ptc = new THREE.Group();
-const ptcCore = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.5, 0.5), ptcMat);
-ptc.add(ptcCore);
-for(let i=0;i<5;i++){
-  const r = new THREE.Mesh(new THREE.BoxGeometry(0.08,0.34,0.34), new THREE.MeshStandardMaterial({color:0xffe0b0,emissive:AMBER,emissiveIntensity:1.2}));
-  r.position.set(-0.36+i*0.18, 0, 0); ptc.add(r);
-}
-ptc.position.set(2.4, 1.35, 1.7);
-scene.add(ptc);
-const ptcBars = [];
-
-// 鼓风机
-const blower = new THREE.Group();
-const fanBlades = new THREE.Group();
-for(let i=0;i<5;i++){
-  const bl = new THREE.Mesh(new THREE.BoxGeometry(0.5,0.06,0.14), new THREE.MeshStandardMaterial({color:0x9fb3cc,metalness:0.4,roughness:0.5}));
-  bl.rotation.y = (i/5)*Math.PI*2; bl.position.set(Math.cos((i/5)*Math.PI*2)*0.42, 0, Math.sin((i/5)*Math.PI*2)*0.42);
-  bl.lookAt(Math.cos((i/5)*Math.PI*2)*2,0,Math.sin((i/5)*Math.PI*2)*2);
-  fanBlades.add(bl);
-}
-fanBlades.position.set(0, 1.3, 0);
-blower.add(fanBlades);
-blower.add(new THREE.Mesh(new THREE.TorusGeometry(0.55,0.06,12,28), darkMetal)).rotation.x=Math.PI/2;
-blower.position.set(0, 0, -2.6);
-scene.add(blower);
-
-// 动力电池
-const batt = new THREE.Group();
-const battBox = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.5, 2.0), battMat);
-batt.add(battBox);
-batt.add(new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.12, 1.8), new THREE.MeshStandardMaterial({color:0x1f2732}))).position.y=0.31;
-batt.position.set(-2.0, -0.2, 1.6);
-scene.add(batt);
-
-// ---------- 标签 ----------
-function makeLabel(text, color='#9fd0ff'){
-  const cv = document.createElement('canvas');
-  const f = 'bold 42px "Microsoft YaHei", "PingFang SC", sans-serif';
-  let c = cv.getContext('2d'); c.font = f;
-  const w = Math.ceil(c.measureText(text).width) + 44, h = 82;
-  cv.width = w; cv.height = h;
-  c = cv.getContext('2d'); c.font = f;
-  c.textAlign='center'; c.textBaseline='middle';
-  c.lineWidth=7; c.strokeStyle='rgba(0,0,0,0.8)'; c.strokeText(text, w/2, h/2);
-  c.fillStyle=color; c.fillText(text, w/2, h/2);
-  const tex = new THREE.CanvasTexture(cv); tex.minFilter = THREE.LinearFilter;
-  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:tex, transparent:true, depthTest:false }));
-  sp.scale.set(w*0.011, h*0.011, 1);
-  return sp;
-}
-function attachLabel(g, text, dy=1.9, color){ const l = makeLabel(text, color); l.position.copy(g.position); l.position.y += dy; scene.add(l); }
-attachLabel(comp, '电动压缩机', 2.1);
-attachLabel(condenser, '冷凝器', 1.9);
-attachLabel(evaporator, '蒸发器', 1.7);
-attachLabel(expv, '膨胀阀', 1.4);
-attachLabel(ptc, 'PTC 加热器', 0.9, '#ffb547');
-attachLabel(batt, '动力电池', 0.9, '#8ba0bd');
-
-// ---------- 场景数据 ----------
-const SC = {
-  normal: {
-    tag:'正常工作', title:'系统正常运行',
-    html:'<div class="row"><b>现象：</b>压缩机稳定运转，冷媒沿高低压回路持续循环，制冷/制热正常。</div>'+
-         '<div class="row"><span class="k">诊断要点：</span>高压侧约 14~16 bar，低压侧约 2.0~2.5 bar；出风温度稳定。</div>',
-    note:'动画示意：红→蓝粒子沿闭合回路流动；压缩机转子旋转、鼓风机转，PTC 微热待用。'
-  },
-  leak: {
-    tag:'故障 · 制冷不足', title:'故障一：制冷剂泄漏',
-    html:'<div class="row"><b>现象：</b>制冷效果逐日下降，风量正常但不够凉。</div>'+
-         '<div class="row"><b>原因：</b>制冷剂量不足，常见于管路接头、冷凝器、压缩机轴封等泄漏。</div>'+
-         '<div class="row"><span class="k">诊断：</span>歧管表显示<u>高低压双低</u>（低压&lt;1.5 bar、高压&lt;12 bar）。先用电子检漏仪定位，修复后抽真空、按铭牌定量加注，严禁带漏直接补加。</div>',
-    note:'动画示意：回路粒子流速明显下降（流量不足），并在冷凝器接头处出现向外喷散的冷媒泄漏粒子。'
-  },
-  compfail: {
-    tag:'故障 · 不制冷', title:'故障二：压缩机不工作',
-    html:'<div class="row"><b>现象：</b>空调完全不制冷，压缩机无运转（或运转异常）。</div>'+
-         '<div class="row"><b>原因：</b>高压供电缺失 / 高压互锁断开 / CAN 通信丢失（如 B14200）/ 控制器或本体损坏。</div>'+
-         '<div class="row"><span class="k">诊断：</span>先读码 → 查高压与互锁 → 对比<u>目标转速 vs 实际转速</u>，最后再判定压缩机本体，避免误换总成。</div>',
-    note:'动画示意：压缩机停机、转子停止、粒子停止流动，压缩机机壳红色警报闪烁。'
-  },
-  ptcfail: {
-    tag:'故障 · 不制热', title:'故障三：PTC 不制热',
-    html:'<div class="row"><b>现象：</b>开暖风后出风不热、始终低于正常温度。</div>'+
-         '<div class="row"><b>原因：</b>PTC 保险丝熔断 / 继电器（K1/K2）烧蚀或线圈损坏 / PTC 本体断·短路 / 温控开关异常。</div>'+
-         '<div class="row"><span class="k">诊断：</span>测<u>PTC 插头电阻约 1~5 Ω</u>（开路/短路即损坏）；查保险丝、继电器线圈与触点通断（如某车型 EF33/EF13/EF14、ER11）。</div>',
-    note:'动画示意：PTC 不再发橙光（无热），改为红色闪烁表示“加热器损坏”，鼓风机仍在吹（只吹冷风）。'
-  },
-  hvil: {
-    tag:'故障 · 高压安全', title:'故障四：高压互锁断开',
-    html:'<div class="row"><b>现象：</b>整车禁止高压输出，压缩机与 PTC 均不工作，报 P1A6000 等互锁故障码。</div>'+
-         '<div class="row"><b>原因：</b>某高压接插件（电池/压缩机/PTC/电机）松动、脱落或损坏，使互锁回路开路。</div>'+
-         '<div class="row"><span class="k">诊断：</span>测互锁回路电阻，正常<u>&lt;1 Ω</u>、无穷大为断路；沿回路逐段排查各高压连接器。</div>',
-    note:'动画示意：整条回路“跳闸”——黄色警示笼罩全系统，所有粒子停止、执行器停机。'
-  },
-  sensor: {
-    tag:'故障 · 传感器', title:'故障五：传感器信号异常',
-    html:'<div class="row"><b>现象：</b>压缩机频繁启停或不停机，蒸发器结冰、出风异常。</div>'+
-         '<div class="row"><b>原因：</b>蒸发器温度传感器（NTC）或制冷剂压力传感器信号异常。</div>'+
-         '<div class="row"><span class="k">诊断：</span>压力传感器为三线制（<u>5V 参考 / 信号 / 地</u>），检查参考电压与信号电压是否随压力变化，确认地线无虚接。</div>',
-    note:'动画示意：蒸发器表面结霜发白、压缩机“一抖一停”间歇运转，粒子忽快忽慢。'
-  }
-};
-
-// ---------- UI ----------
-const order = ['normal','leak','compfail','ptcfail','hvil','sensor'];
-const ctrlEl = document.getElementById('controls');
-const btnLabel = { normal:'正常运行', leak:'制冷剂泄漏', compfail:'压缩机不工作', ptcfail:'PTC 不制热', hvil:'高压互锁', sensor:'传感器故障' };
-order.forEach(k=>{
-  const b = document.createElement('button');
-  b.className='btn'; b.textContent=btnLabel[k]; b.dataset.k=k;
-  b.onclick=()=>setScenario(k);
-  ctrlEl.appendChild(b);
-});
-
-// ---------- 状态 ----------
-let current = 'normal';
-let flowOn = true, flowSpeed = 1.0, leakActive = false, frost = false;
-let flashComp = false, flashPtc = false, flashSensor = false, evapFrost = 0;
-
-const CONFIG = {
-  normal:   { flowMul:1.0 },
-  leak:     { flowMul:0.35, leak:true },
-  compfail: { flowMul:0, off:true, flashComp:true },
-  ptcfail:  { flowMul:1.0, ptcOff:true, flashPtc:true },
-  hvil:     { flowMul:0, off:true, flashComp:true, flashPtc:true, warn:true },
-  sensor:   { flowMul:0.55, frost:true, jitter:true, flashSensor:true }
-};
-
-function setScenario(k){
-  current = k;
-  const s = SC[k];
-  document.getElementById('tag').textContent = s.tag;
-  document.getElementById('infoTitle').textContent = s.title;
-  document.getElementById('infoBody').innerHTML = s.html;
-  document.getElementById('animNote').textContent = s.note;
-  document.querySelectorAll('.btn').forEach(b=>b.classList.toggle('active', b.dataset.k===k));
-
-  const c = CONFIG[k];
-  flowSpeed = c.flowMul; flowOn = c.flowMul>0; leakActive = !!c.leak;
-  flashComp = !!c.flashComp; flashPtc = !!c.flashPtc; flashSensor = !!c.flashSensor;
-  frost = !!c.frost; evapFrost = 0;
-  // 视觉复位
-  compBody.material = compMat;
-  compBody.material.emissive.set(0x000000);
-  ptcCore.material = ptcMat; ptcCore.material.emissive.setHex(AMBER);
-  condMatRef.color.set(0x6f7f93);
-  evapMat.color.set(0x6f7f93);
-  scene.fog.color.set(0x0b1220);
-  renderer.setClearColor(0x0b1220);
-  if(c.warn){ document.getElementById('panel').style.boxShadow='0 0 0 2px rgba(255,181,71,.6)'; }
-  else document.getElementById('panel').style.boxShadow='none';
-  if(c.flashPtc || c.ptcOff){ ptcCore.material.emissive.setHex(0xff3b30); ptcCore.material.emissiveIntensity=0.4; }
-}
-setScenario('normal');
-
-// 泄漏粒子初始化
-for(let i=0;i<LK;i++){ lkVel.push(new THREE.Vector3(
-  (Math.random()-0.5)*1.2, (Math.random()-0.5)*1.2, (Math.random()-0.5)*1.2)); }
-
-const clock = new THREE.Clock();
-
-// ---------- 动画循环 ----------
-function tick(){
-  const dt = Math.min(clock.getDelta(), 0.05);
-  const t = clock.elapsedTime;
-
-  // 转子/鼓风机
-  const spin = flowOn ? (frost? (Math.sin(t*16)>0? 2.2 : 0) : 2.2) : 0; // 传感器故障：间歇
-  rotor.rotation.y += spin * dt;
-  fanBlades.rotation.y += (flowOn? 4.5:0) * dt;
-
-  // 冷媒粒子
-  const stepMul = flowOn ? 0.5*flowSpeed : 0;
-  for(let i=0;i<N_P;i++){
-    prog[i] += stepMul * speedoff[i] * dt;
-    const { pos, seg } = sampleLoop(prog[i]);
-    posArr[i*3]=pos.x; posArr[i*3+1]=pos.y; posArr[i*3+2]=pos.z;
-    const c = segColor(seg);
-    colArr[i*3]=c.r; colArr[i*3+1]=c.g; colArr[i*3+2]=c.b;
-  }
-  pGeo.attributes.position.needsUpdate = true;
-  pGeo.attributes.color.needsUpdate = true;
-
-  // 泄漏喷射
-  const leakOrigin = new THREE.Vector3(-0.5, 0.9, -3.5); // 冷凝器入口接头
-  for(let i=0;i<LK;i++){
-    if(!leakActive){
-      lkPos[i*3]=0; lkPos[i*3+1]=-100; lkPos[i*3+2]=0; // 隐藏到地下
-      continue;
-    }
-    lkPos[i*3]+=lkVel[i].x*dt; lkPos[i*3+1]+=lkVel[i].y*dt; lkPos[i*3+2]+=lkVel[i].z*dt;
-    lkPos[i*3+2]+=0.4*dt; // 向外飘
-    if(lkPos[i*3+2]>1.2 || lkPos[i*3+1]<-0.5 || Math.abs(lkPos[i*3])>1.0){
-      lkPos[i*3]=leakOrigin.x; lkPos[i*3+1]=leakOrigin.y; lkPos[i*3+2]=leakOrigin.z;
-      lkVel[i].set((Math.random()-0.5)*1.2, (Math.random()-0.5)*1.2, (Math.random()-0.5)*1.2);
-    }
-  }
-  lkGeo.attributes.position.needsUpdate = true;
-
-  // 故障视觉
-  // 压缩机闪烁
-  if(flashComp){
-    const e = (Math.sin(t*8)+1)/2;
-    compBody.material = compBody.material;
-    compBody.material.emissive.setHex(0xff3b30);
-    compBody.material.emissiveIntensity = 0.2 + e*0.8;
-  } else {
-    compBody.material.emissiveIntensity = 0;
-  }
-  // PTC
-  if(flashPtc){
-    const e = (Math.sin(t*8)+1)/2;
-    ptcCore.material.emissive.setHex(0xff3b30);
-    ptcCore.material.emissiveIntensity = 0.2 + e*0.8;
-  } else if(!CONFIG[current].ptcOff){
-    ptcCore.material.emissive.setHex(AMBER);
-    ptcCore.material.emissiveIntensity = 0.5 + Math.sin(t*2)*0.15;
-  }
-  // 蒸发器结霜
-  const targetFrost = frost ? 1 : 0;
-  evapFrost += (targetFrost - evapFrost) * 0.05;
-  if(evapFrost > 0.01){
-    evapMat.color.lerpColors(new THREE.Color(0x6f7f93), new THREE.Color(0xeaf6ff), evapFrost);
-    condMatRef.color.set(0x6f7f93);
-  } else {
-    evapMat.color.set(0x6f7f93);
-  }
-  // 传感器故障标记闪烁
-  if(flashSensor && lettuce){ /* no-op placeholder */ }
-  const sensorGlow = document.getElementById('panel');
-
-  controls.update();
-  renderer.render(scene, camera);
-  requestAnimationFrame(tick);
-}
-tick();
-
-addEventListener('resize', ()=>{
-  camera.aspect = innerWidth/innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth, innerHeight);
-});
+    btns.forEach(function(b){
+      b.addEventListener('click', function(){ activate(b.dataset.view); });
+    });
+  })();
 </script>
 </body>
 </html>
