@@ -3,283 +3,321 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>新能源汽车空调系统故障诊断 · 作品提交</title>
+<title>理想 i9 · 空调系统故障诊断</title>
 <style>
   :root{
-    --bg:#0b1220; --panel:#111a2c; --line:#243047; --line2:#2c3b58;
-    --red:#ff6b4a; --blue:#48b5ff; --green:#38d19b; --amber:#ffb547;
-    --txt:#dbe6f5; --dim:#8ba0bd; --white:#fff;
+    --bg:#eef1f6; --card:#ffffff; --card2:#f6f8fb; --border:#e5eaf1;
+    --text:#1a2233; --dim:#6a7686; --faint:#9aa5b5;
+    --brand:#1677ff; --brand-weak:#eaf3ff;
+    --red:#e5484d; --amber:#f5a524; --green:#18a058;
   }
   *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
-    font-family:"Microsoft YaHei","PingFang SC",sans-serif;}
-  a{color:var(--blue);text-decoration:none;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,"PingFang SC","Microsoft YaHei","Source Han Sans SC",sans-serif;
+    -webkit-font-smoothing:antialiased;}
 
-  /* ---------- 顶部三按键 ---------- */
-  #modebar{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:99;
-    display:flex;gap:8px;background:rgba(13,20,34,.92);border:1px solid var(--line);
-    padding:6px;border-radius:14px;box-shadow:0 6px 24px rgba(0,0,0,.5);}
-  .mbtn{background:transparent;border:1px solid transparent;color:var(--txt);
-    padding:10px 16px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;
-    font-family:inherit;transition:.18s;white-space:nowrap;}
-  .mbtn:hover{background:rgba(34,46,70,.7);}
-  .mbtn.active{background:linear-gradient(180deg,#1f3a6b,#183052);border-color:var(--blue);
-    color:#fff;box-shadow:0 0 0 1px rgba(72,181,255,.3) inset;}
-  .mbtn .n{color:var(--amber);margin-right:4px;font-weight:700;}
+  /* ---------- 顶部状态栏（理想车机风） ---------- */
+  #topbar{position:fixed;top:0;left:0;right:0;height:60px;z-index:70;
+    display:flex;align-items:center;gap:16px;padding:0 20px;
+    background:rgba(255,255,255,.82);backdrop-filter:blur(18px) saturate(1.4);
+    -webkit-backdrop-filter:blur(18px) saturate(1.4);
+    border-bottom:1px solid var(--border);}
+  #topbar .brand{display:flex;align-items:center;gap:9px;font-size:17px;font-weight:700;
+    letter-spacing:.5px;color:#111;}
+  #topbar .brand .logo{display:inline-flex;align-items:center;justify-content:center;
+    width:28px;height:28px;border-radius:8px;background:#111;color:#fff;font-size:13px;font-weight:800;}
+  #topbar .brand .model{font-size:12px;font-weight:500;color:var(--dim);margin-top:2px;}
+  #topbar .title{margin-left:auto;transform:translateX(50%);position:absolute;left:50%;
+    font-size:15px;font-weight:600;color:var(--text);white-space:nowrap;}
+  #topbar .status{color:var(--dim);font-size:13px;white-space:nowrap;}
 
-  /* ---------- 视图容器 ---------- */
-  .view{position:fixed;inset:0;display:none;}
+  /* ---------- 内容区 ---------- */
+  #content{position:fixed;inset:60px 0 84px 0;overflow:hidden;}
+  .view{position:absolute;inset:0;display:none;}
   .view.active{display:block;}
-  #view-process,#view-circuit{overflow-y:auto;background:
-    radial-gradient(1200px 600px at 20% -10%, #122036 0%, var(--bg) 55%);}
-  #view-anim iframe{width:100%;height:100%;border:0;display:block;background:var(--bg);}
+  #view-process,#view-circuit{overflow-y:auto;}
+  #view-anim iframe{width:100%;height:100%;border:0;display:block;background:#0b1220;}
+  #view-anim .anim-tip{position:absolute;top:14px;right:20px;z-index:5;
+    background:rgba(255,255,255,.9);backdrop-filter:blur(12px);color:var(--dim);
+    font-size:12px;padding:7px 12px;border-radius:20px;box-shadow:0 4px 16px rgba(0,0,0,.12);}
 
-  .wrap{max-width:960px;margin:0 auto;padding:86px 24px 80px;}
+  .wrap{max-width:920px;margin:0 auto;padding:26px 26px 40px;}
 
-  /* ---------- 通用排版 ---------- */
+  /* ---------- 卡片与排版（浅色，理想风圆角） ---------- */
   .doc-head{margin-bottom:18px;}
-  .doc-head .kicker{display:inline-block;font-size:12px;letter-spacing:1px;
-    color:var(--green);border:1px solid rgba(56,209,155,.4);background:rgba(56,209,155,.1);
-    padding:3px 10px;border-radius:20px;margin-bottom:10px;}
-  .doc-head h1{margin:0;font-size:26px;color:var(--white);letter-spacing:.5px;}
-  .doc-head p{margin:8px 0 0;font-size:14px;color:var(--dim);line-height:1.7;}
+  .doc-head .kicker{display:inline-flex;align-items:center;gap:6px;font-size:12px;
+    color:var(--brand);background:var(--brand-weak);border:1px solid #cfe2ff;
+    padding:4px 12px;border-radius:20px;margin-bottom:12px;font-weight:600;}
+  .doc-head h1{margin:0;font-size:25px;color:#111;letter-spacing:.3px;}
+  .doc-head p{margin:8px 0 0;font-size:14px;color:var(--dim);line-height:1.75;}
 
-  .sec{margin:28px 0 0;}
-  .sec h2{font-size:19px;color:var(--white);margin:0 0 12px;padding-left:11px;
-    border-left:3px solid var(--blue);line-height:1.3;}
-  .sec h3{font-size:15.5px;color:var(--amber);margin:18px 0 8px;}
-  .sec p{font-size:14.5px;line-height:1.85;color:var(--txt);margin:8px 0;}
+  .sec{margin:26px 0 0;}
+  .sec h2{font-size:18px;color:#111;margin:0 0 12px;padding-left:12px;
+    border-left:3px solid var(--brand);line-height:1.35;}
+  .sec h3{font-size:15px;color:var(--amber);margin:18px 0 8px;}
+  .sec p{font-size:14.5px;line-height:1.9;color:var(--text);margin:8px 0;}
   .sec ul,.sec ol{margin:8px 0;padding-left:22px;}
-  .sec li{font-size:14.5px;line-height:1.85;margin:6px 0;color:var(--txt);}
-  .sec li b{color:var(--white);}
-  .hl{color:var(--amber);font-weight:600;}
-  .ok{color:var(--green);font-weight:600;}
-  .bad{color:var(--red);font-weight:600;}
+  .sec li{font-size:14.5px;line-height:1.9;margin:6px 0;}
+  .sec li b{color:#111;}
+  .hl{color:var(--amber);font-weight:700;}
+  .ok{color:var(--green);font-weight:700;}
+  .bad{color:var(--red);font-weight:700;}
 
-  /* 卡片 */
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;
-    padding:18px 20px;margin:16px 0;}
-  .card h4{margin:0 0 10px;font-size:15px;color:var(--white);}
-  .card .step{display:flex;gap:12px;margin:14px 0;}
-  .card .num{flex:0 0 30px;height:30px;border-radius:8px;display:flex;align-items:center;
-    justify-content:center;background:linear-gradient(180deg,#1f3a6b,#183052);
-    color:var(--white);font-weight:700;font-size:14px;border:1px solid var(--blue);}
-  .card .body{flex:1;font-size:14px;line-height:1.8;}
-  .card .body b{color:var(--white);}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:18px;
+    padding:20px 22px;margin:16px 0;box-shadow:0 4px 18px rgba(30,52,90,.05);}
+  .card h4{margin:0 0 12px;font-size:15px;color:#111;}
+  .card .step{display:flex;gap:13px;margin:14px 0;}
+  .card .num{flex:0 0 30px;height:30px;border-radius:9px;display:flex;align-items:center;
+    justify-content:center;background:var(--brand-weak);color:var(--brand);
+    font-weight:700;font-size:14px;border:1px solid #cfe2ff;}
+  .card .body{flex:1;font-size:14px;line-height:1.85;color:var(--text);}
+  .card .body b{color:#111;}
 
   /* 表格 */
-  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px;
-    background:var(--panel);border-radius:10px;overflow:hidden;}
-  th,td{padding:10px 12px;border:1px solid var(--line);text-align:left;line-height:1.6;}
-  th{background:#1f3864;color:var(--white);font-weight:600;white-space:nowrap;}
-  td{color:var(--txt);}
-  tr:nth-child(even) td{background:rgba(255,255,255,.02);}
-  .v{font-variant-numeric:tabular-nums;color:var(--white);}
+  .tbl-wrap{overflow-x:auto;background:var(--card);border:1px solid var(--border);
+    border-radius:14px;margin:14px 0;box-shadow:0 4px 18px rgba(30,52,90,.04);}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:640px;}
+  th,td{padding:11px 13px;border-bottom:1px solid var(--border);text-align:left;line-height:1.6;}
+  th{background:var(--card2);color:#111;font-weight:600;white-space:nowrap;}
+  td{color:var(--text);}
+  tr:last-child td{border-bottom:none;}
+  .v{font-variant-numeric:tabular-nums;color:#111;}
 
-  /* 电路图 */
-  .fig{background:var(--panel);border:1px solid var(--line);border-radius:14px;
-    padding:18px;margin:18px 0;}
-  .fig img{width:100%;height:auto;border-radius:8px;display:block;
-    border:1px solid var(--line2);background:#0d1626;}
-  .fig figcaption{margin-top:12px;font-size:13.5px;line-height:1.75;color:var(--txt);}
-  .fig figcaption .ft{color:var(--white);font-weight:700;}
+  /* 电路图卡片 */
+  .fig{background:var(--card);border:1px solid var(--border);border-radius:18px;
+    padding:18px;margin:18px 0;box-shadow:0 4px 18px rgba(30,52,90,.05);}
+  .fig img{width:100%;height:auto;border-radius:10px;display:block;
+    background:#0d1626;border:1px solid #dbe2ec;}
+  .fig figcaption{margin-top:13px;font-size:13.5px;line-height:1.8;color:var(--text);}
+  .fig figcaption .ft{color:#111;font-weight:700;}
 
-  /* 故障点标注 */
-  .fp{display:flex;gap:10px;margin:8px 0;font-size:13.5px;align-items:flex-start;line-height:1.6;}
-  .fp .pin{flex:0 0 14px;height:14px;border-radius:50%;margin-top:4px;border:2px solid rgba(255,255,255,.5);}
+  .fp{display:flex;gap:10px;margin:8px 0;font-size:13.5px;align-items:flex-start;line-height:1.65;}
+  .fp .pin{flex:0 0 14px;height:14px;border-radius:50%;margin-top:4px;border:2px solid #fff;box-shadow:0 0 0 1px var(--border);}
   .fp .pin.r{background:var(--red);}
   .fp .pin.o{background:var(--amber);}
 
-  .conclude{border-left:3px solid var(--green);background:rgba(56,209,155,.06);
-    padding:16px 18px;border-radius:0 12px 12px 0;margin:16px 0;}
-  .conclude p{font-size:14.5px;line-height:1.85;margin:6px 0;}
+  .conclude{border-left:3px solid var(--green);background:#f0faf4;
+    padding:16px 18px;border-radius:0 14px 14px 0;margin:16px 0;}
+  .conclude p{font-size:14.5px;line-height:1.9;margin:6px 0;}
+
+  /* ---------- 底部 Dock（理想车机底部功能栏） ---------- */
+  #dock{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:80;
+    display:flex;gap:6px;padding:8px;border-radius:22px;
+    background:rgba(255,255,255,.86);backdrop-filter:blur(20px) saturate(1.5);
+    -webkit-backdrop-filter:blur(20px) saturate(1.5);
+    border:1px solid var(--border);box-shadow:0 10px 32px rgba(30,52,90,.16);}
+  .dbtn{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:82px;
+    padding:9px 12px 8px;border:none;background:transparent;border-radius:16px;
+    cursor:pointer;color:var(--dim);transition:.18s;font-family:inherit;}
+  .dbtn .i{width:42px;height:42px;border-radius:13px;display:flex;align-items:center;
+    justify-content:center;background:var(--card2);transition:.18s;}
+  .dbtn .i svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;
+    stroke-linecap:round;stroke-linejoin:round;}
+  .dbtn .l{font-size:12px;font-weight:600;letter-spacing:.5px;}
+  .dbtn:hover{color:#111;}
+  .dbtn.active{color:var(--brand);}
+  .dbtn.active .i{background:var(--brand);color:#fff;box-shadow:0 6px 16px rgba(22,119,255,.32);}
 
   @media(max-width:560px){
-    .mbtn{padding:8px 10px;font-size:12.5px;}
-    .wrap{padding:80px 16px 60px;}
-    .doc-head h1{font-size:22px;}
-    th,td{padding:8px;font-size:12.5px;}
+    .dbtn{min-width:70px;padding:8px 8px 6px;}
+    .dbtn .i{width:38px;height:38px;border-radius:12px;}
+    .wrap{padding:18px 16px 30px;}
+    .doc-head h1{font-size:21px;}
+    #topbar .title{display:none;}
   }
 </style>
 </head>
 <body>
 
-<!-- 三按键切换栏 -->
-<nav id="modebar">
-  <button class="mbtn active" data-view="process"><span class="n">①</span>故障排查流程</button>
-  <button class="mbtn" data-view="circuit"><span class="n">②</span>电路图与原理分析</button>
-  <button class="mbtn" data-view="anim"><span class="n">③</span>动画演示</button>
+<!-- 顶部状态栏 -->
+<header id="topbar">
+  <div class="brand">
+    <span class="logo">理想</span>
+    <div>
+      <div style="line-height:1.1;">理想 i9</div>
+      <div class="model">家庭旗舰 SUV · 纯电平台</div>
+    </div>
+  </div>
+  <div class="title" id="topTitle">故障排查流程</div>
+  <div class="status">智能座舱 · 空调诊断</div>
+</header>
+
+<!-- 内容区 -->
+<main id="content">
+
+  <!-- 功能③ 动画演示 -->
+  <section id="view-anim" class="view">
+    <iframe src="anim.html" title="理想 i9 空调系统 3D 动画" loading="eager"></iframe>
+    <div class="anim-tip">三维动画 · 可拖拽 / 缩放 / 切换故障场景</div>
+  </section>
+
+  <!-- 功能① 故障排查流程 -->
+  <section id="view-process" class="view active">
+    <div class="wrap">
+      <div class="doc-head">
+        <span class="kicker">● 功能① · 文字说明</span>
+        <h1>理想 i9 空调系统 · 故障排查流程</h1>
+        <p>以文字形式完整记录从「明确故障」到「书写结论」的标准排查步骤，覆盖故障范围界定、故障码读取、测量数据留存与结果书写四个环节。</p>
+      </div>
+
+      <div class="sec">
+        <h2>步骤 1 · 明确故障范围与成因</h2>
+        <div class="card">
+          <div class="step"><div class="num">1</div><div class="body"><b>确认故障现象：</b>与用户沟通故障发生的时间、频次与条件（是否高速、高温、充电后出现），判断属于<b class="hl">不制冷</b>、<b class="hl">不制热</b>还是<b class="hl">间歇性故障</b>。</div></div>
+          <div class="step"><div class="num">2</div><div class="body"><b>区分系统边界：</b>制冷失效优先指向<b>制冷剂回路 + 电动压缩机</b>；制热失效优先指向<b>PTC 加热回路</b>；两者同时失效多指向<b>高压供电 / 高压互锁 / 整车控制</b>公共环节。</div></div>
+          <div class="step"><div class="num">3</div><div class="body"><b>确定排查方向：</b>依据现象把故障收敛到「电控类」或「机械/冷媒类」，避免盲目拆装。例如风量正常但不够凉，属于制冷剂或压缩机问题；开暖风不热则锁定 PTC。</div></div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <h2>步骤 2 · 读取故障码、留存测量数据</h2>
+        <div class="card">
+          <div class="step"><div class="num">1</div><div class="body"><b>连接诊断仪读取 DTC：</b>空调系统典型故障码包括 <span class="v">B14200</span>（压缩机控制/通信类）、<span class="v">P1A6000</span>（高压互锁回路）。读取后先<b class="hl">清除并复现</b>，确认是否为当前故障。</div></div>
+          <div class="step"><div class="num">2</div><div class="body"><b>留存冻结帧数据：</b>记录故障瞬间的高压母线电压、压缩机目标转速 vs 实际转速、环境温度、蒸发器温度等<b>冻结帧（Freeze Frame）</b>，用于事后因果分析。</div></div>
+          <div class="step"><div class="num">3</div><div class="body"><b>留存测量数据：</b>将歧管压力表、万用表/电流钳读数按规范填入测量记录表（见下方），做到<b>每个数据都有测量点、仪表、单位与判定</b>。</div></div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <h2>步骤 3 · 测量电路与电压</h2>
+        <p>使用<span class="hl">数字万用表、电流钳、绝缘电阻表、歧管压力表组</span>，按以下项目逐项测量并记录：</p>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th style="width:22%">检测项目</th><th style="width:30%">检测点</th><th style="width:16%">参考值</th><th style="width:16%">实测值(示例)</th><th style="width:16%">判定</th></tr></thead>
+            <tbody>
+              <tr><td>高压管路压力</td><td>高压检修阀</td><td class="v">14 ~ 16 bar</td><td class="v">9.2 bar</td><td class="bad">偏低</td></tr>
+              <tr><td>低压管路压力</td><td>低压检修阀</td><td class="v">2.0 ~ 2.5 bar</td><td class="v">3.8 bar</td><td class="bad">偏高</td></tr>
+              <tr><td>高压母线电压</td><td>压缩机高压插接件</td><td class="v">350 ~ 400 V</td><td class="v">372 V</td><td class="ok">正常</td></tr>
+              <tr><td>中心线(中性点)电压</td><td>压缩机三相端中心点</td><td class="v">≈ 母线/2</td><td class="v">—(不平衡)</td><td class="bad">异常</td></tr>
+              <tr><td>压缩机三相电流</td><td>相线(电流钳)</td><td class="v">三相均衡</td><td class="v">U相偏大</td><td class="bad">不平衡</td></tr>
+              <tr><td>PTC 加热器电阻</td><td>PTC 插头两端</td><td class="v">1 ~ 5 Ω</td><td class="v">3.1 Ω</td><td class="ok">正常</td></tr>
+              <tr><td>互锁回路电阻</td><td>HVIL 监测端</td><td class="v">&lt; 1 Ω</td><td class="v">0.3 Ω</td><td class="ok">正常</td></tr>
+              <tr><td>传感器 5V 参考</td><td>压力传感器 1 脚</td><td class="v">4.9 ~ 5.1 V</td><td class="v">5.02 V</td><td class="ok">正常</td></tr>
+              <tr><td>CAN 网络电阻</td><td>OBD 6/14 引脚</td><td class="v">≈ 60 Ω</td><td class="v">61 Ω</td><td class="ok">正常</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p><b>中心线电压说明：</b>电动压缩机内部为三相电机，其三相绕组中性点（中心线）电压应约等于母线电压的一半且稳定。若出现<b class="hl">三相不平衡</b>，说明电机绕组存在匝间短路、断路或绝缘劣化，是判断<b class="bad">电机损坏</b>的关键依据。</p>
+      </div>
+
+      <div class="sec">
+        <h2>步骤 4 · 结果书写清晰</h2>
+        <div class="card">
+          <div class="step"><div class="num">1</div><div class="body">每个测量值必须标注<b>测量点、使用仪表、单位、实测值、参考值、判定结论</b>六要素，禁止只写「正常/不正常」；</div></div>
+          <div class="step"><div class="num">2</div><div class="body">结论采用<b class="hl">「现象 → 数据 → 判断 → 原因」</b>的因果链条书写，让复核人员无需现场即可复现推理；</div></div>
+          <div class="step"><div class="num">3</div><div class="body">对异常数据用<span class="ok">绿色</span>标正常、<span class="bad">红色</span>标异常，并附一句说明（如上表所示）。</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 功能② 电路图与原理分析 -->
+  <section id="view-circuit" class="view">
+    <div class="wrap">
+      <div class="doc-head">
+        <span class="kicker">● 功能② · 电路图 + 文字说明</span>
+        <h1>电路查阅 · 故障点标注 · 原理分析</h1>
+        <p>查阅并绘制理想 i9 空调系统关键电路，标注故障点位置（<span class="bad">线路断裂</span>、<span class="hl">电机损坏</span>），并给出故障排除结果、最终原因与失效原理。</p>
+      </div>
+
+      <div class="sec">
+        <h2>一、电路资料查阅</h2>
+        <p>本次查阅该车型空调系统的 5 张关联电路图：<b>①压缩机驱动电路、②PTC 加热电路、③高压互锁回路、④传感器电路、⑤控制与通信电路</b>。唤醒/控制逻辑、熔断器与继电器编号、插接件针脚以维修手册对应章节为准。</p>
+      </div>
+
+      <div class="sec">
+        <h2>二、电路图绘制与故障点标注</h2>
+
+        <figure class="fig">
+          <img src="images/sch1_compressor.png" alt="压缩机驱动电路">
+          <figcaption><span class="ft">图 1 · 压缩机驱动电路。</span>动力电池高压直流经熔断器 FU、主接触器 KM 进入三相逆变桥，逆变为三相交流驱动压缩机电机；控制板通过 CAN_H/CAN_L 与整车控制器通信。<br>
+          <span class="fp"><span class="pin r"></span><span><b class="bad">故障点 A — 线路断裂：</b>三相逆变桥输出相线、CAN 通信线一旦断裂，会导致缺相、通信丢失，控制器报码停机。</span></span>
+          <span class="fp"><span class="pin o"></span><span><b class="hl">故障点 B — 电机损坏：</b>压缩机电机绕组匝间短路/断路（标注于电机符号处），三相电流不平衡，触发过流保护。</span></span></figcaption>
+        </figure>
+
+        <figure class="fig">
+          <img src="images/sch2_ptc.png" alt="PTC 加热电路">
+          <figcaption><span class="ft">图 2 · PTC 加热电路。</span>保险丝 + 双继电器（K1/K2）冗余控制，为 PTC 发热体供电，实现低温辅助制热。<br>
+          <span class="fp"><span class="pin r"></span><span><b class="bad">线路断裂/熔断：</b>保险丝熔断、PTC 供电线路断裂或继电器触点烧蚀，均使 PTC 无法得电。</span></span>
+          <span class="fp"><span class="pin o"></span><span><b class="hl">部件损坏：</b>PTC 发热体本体断路或短路（正常电阻 1~5 Ω）。</span></span></figcaption>
+        </figure>
+
+        <figure class="fig">
+          <img src="images/sch3_hvil.png" alt="高压互锁回路">
+          <figcaption><span class="ft">图 3 · 高压互锁回路。</span>各高压接插件（电池/压缩机/PTC/电机）的互锁线串联成回路，任一点断开即整车禁止高压输出。<br>
+          <span class="fp"><span class="pin r"></span><span><b class="bad">故障点 A — 线路断裂：</b>任一高压接插件松动、脱落或互锁线断裂，回路开路（电阻无穷大，正常 &lt;1 Ω）。</span></span></figcaption>
+        </figure>
+
+        <figure class="fig">
+          <img src="images/sch4_sensor.png" alt="传感器电路">
+          <figcaption><span class="ft">图 4 · 传感器电路。</span>三线制制冷剂压力传感器（5V 参考/信号/地）+ 蒸发器温度传感器（NTC），控制器内部上拉采样。<br>
+          <span class="fp"><span class="pin r"></span><span><b class="bad">故障点 A — 线路断裂：</b>信号线断裂或地线虚接，导致信号电压异常，压缩机频繁启停或不停机。</span></span></figcaption>
+        </figure>
+
+        <figure class="fig">
+          <img src="images/sch5_control.png" alt="控制与通信电路">
+          <figcaption><span class="ft">图 5 · 控制与通信电路。</span>CAN 总线、控制单元与执行器之间的控制线路，实现整车对压缩机的转速指令与状态反馈。<br>
+          <span class="fp"><span class="pin r"></span><span><b class="bad">故障点 A — 线路断裂：</b>CAN_H/CAN_L 断裂或控制线路开路，导致通信丢失（如 B14200），压缩机无法启动。</span></span></figcaption>
+        </figure>
+      </div>
+
+      <div class="sec">
+        <h2>三、故障排除结果</h2>
+        <div class="card">
+          <p>依据数据判定，本例故障定位为：<b class="hl">压缩机电机绕组匝间短路</b>（高/低压压力异常 + 三相电流不平衡 + 中心线电压失衡），并伴有<span class="bad">三相逆变桥输出相线插头端子烧蚀松脱</span>（相当于线路断裂）。</p>
+          <p>修复措施：更换同型号电动压缩机总成 → 修复/更换烧蚀端子与线束 → 对制冷剂回路抽真空保压、按铭牌定量加注 → 清除故障码并路试。<b class="ok">修复后系统恢复正常，故障码不再复现。</b></p>
+        </div>
+      </div>
+
+      <div class="sec">
+        <h2>四、最终故障原因与原理分析</h2>
+        <div class="conclude">
+          <p><b class="hl">最终故障原因：</b>压缩机电机定子绕组匝间绝缘劣化，导致匝间短路；长期大电流使相线端子过热烧蚀、产生接触不良（局部断线）。</p>
+          <p><b class="hl">失效原理：</b></p>
+          <p>① <b>电机匝间短路</b> → 三相绕组阻抗不平衡 → 三相电流不均衡、中心线电压偏移；控制器检测到<b>过流/缺相</b>后进入保护，<b>停止压缩机输出</b> → 制冷剂不再循环，系统丧失制冷能力，表现为「高压偏低、低压偏高、完全/间歇不制冷」。</p>
+          <p>② <b>相线端子过热烧蚀</b> → 接触电阻增大 → 局部相当于<b>线路断裂</b> → 加剧缺相与发热，与绕组短路互为因果，最终导致压缩机彻底停转。</p>
+          <p>③ 同理，若为<b>线路断裂型</b>故障（如互锁线断、CAN 线断、传感器信号线断），则是「信号/供电中断 → 保护停机或误判」这一失效链路，同样造成系统功能丧失。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- 底部 Dock（理想车机底部功能栏） -->
+<nav id="dock">
+  <button class="dbtn active" data-view="process" data-title="故障排查流程">
+    <span class="i"><svg viewBox="0 0 24 24"><path d="M9 5h9M9 12h9M9 19h6"/><rect x="4" y="4" width="16" height="16" rx="3"/></svg></span>
+    <span class="l">① 排查流程</span>
+  </button>
+  <button class="dbtn" data-view="circuit" data-title="电路图与原理分析">
+    <span class="i"><svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.2"/><circle cx="18" cy="7" r="2.2"/><circle cx="12" cy="17" r="2.2"/><path d="M8 7.5L10.5 15M16 8l-2.8 7"/></svg></span>
+    <span class="l">② 电路图</span>
+  </button>
+  <button class="dbtn" data-view="anim" data-title="动画演示">
+    <span class="i"><svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M12 12l8-4.5M12 12L4 7.5M12 12v9"/></svg></span>
+    <span class="l">③ 动画演示</span>
+  </button>
 </nav>
-
-<!-- ================= 功能一：故障排查流程 ================= -->
-<section id="view-process" class="view active">
-  <div class="wrap">
-    <div class="doc-head">
-      <span class="kicker">功能一 · 文字说明</span>
-      <h1>新能源汽车空调系统 · 故障排查流程</h1>
-      <p>本部分以文字形式完整记录从「明确故障」到「书写结论」的标准排查步骤，覆盖故障范围界定、故障码读取、测量数据留存与结果书写四个环节。</p>
-    </div>
-
-    <div class="sec">
-      <h2>步骤 1 · 明确故障范围与成因</h2>
-      <div class="card">
-        <div class="step">
-          <div class="num">1</div>
-          <div class="body"><b>确认故障现象：</b>首先向驾驶员了解故障发生的时间、频次与条件（是否高速、是否高温、是否充电后出现）。判断属于<b class="hl">不制冷</b>、<b class="hl">不制热</b>还是<b class="hl">间歇性故障</b>。</div>
-        </div>
-        <div class="step">
-          <div class="num">2</div>
-          <div class="body"><b>区分系统边界：</b>制冷失效优先指向<b>制冷剂回路 + 电动压缩机</b>；制热失效优先指向<b>PTC 加热回路</b>；两者同时失效多指向<b>高压供电 / 高压互锁 / 整车控制</b>公共环节。</div>
-        </div>
-        <div class="step">
-          <div class="num">3</div>
-          <div class="body"><b>确定排查方向：</b>依据现象把故障收敛到「电控类」或「机械/冷媒类」两类，避免盲目拆装。例如风量正常但不够凉，属于制冷剂或压缩机问题；开暖风不热则锁定 PTC。</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="sec">
-      <h2>步骤 2 · 读取故障码、留存测量数据</h2>
-      <div class="card">
-        <div class="step">
-          <div class="num">1</div>
-          <div class="body"><b>连接诊断仪读取 DTC：</b>空调系统典型故障码包括 <span class="v">B14200</span>（压缩机控制/通信类）、<span class="v">P1A6000</span>（高压互锁回路）。读取后先<b class="hl">清除并复现</b>，确认是否为当前故障。</div>
-        </div>
-        <div class="step">
-          <div class="num">2</div>
-          <div class="body"><b>留存冻结帧数据：</b>记录故障发生瞬间的高压母线电压、压缩机目标转速 vs 实际转速、环境温度、蒸发器温度等<b>冻结帧（Freeze Frame）</b>，用于事后因果分析。</div>
-        </div>
-        <div class="step">
-          <div class="num">3</div>
-          <div class="body"><b>留存测量数据：</b>将歧管压力表读数、万用表/电流钳读数按规范填入测量记录表（参见下方表格），做到<b>每一个数据都有测量点、仪表、单位与判定</b>。</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="sec">
-      <h2>步骤 3 · 测量电路与电压</h2>
-      <p>使用<span class="hl">数字万用表、电流钳、绝缘电阻表、歧管压力表组</span>，按以下项目逐项测量并记录：</p>
-      <div class="card">
-        <table>
-          <thead>
-            <tr><th style="width:22%">检测项目</th><th style="width:30%">检测点</th><th style="width:16%">参考值</th><th style="width:16%">实测值(示例)</th><th style="width:16%">判定</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>高压管路压力</td><td>高压检修阀</td><td class="v">14 ~ 16 bar</td><td class="v">9.2 bar</td><td class="bad">偏低</td></tr>
-            <tr><td>低压管路压力</td><td>低压检修阀</td><td class="v">2.0 ~ 2.5 bar</td><td class="v">3.8 bar</td><td class="bad">偏高</td></tr>
-            <tr><td>高压母线电压</td><td>压缩机高压插接件</td><td class="v">350 ~ 400 V</td><td class="v">372 V</td><td class="ok">正常</td></tr>
-            <tr><td>中心线(中性点)电压</td><td>压缩机三相端中心点</td><td class="v">≈ 母线/2</td><td class="v">—(不平衡)</td><td class="bad">异常</td></tr>
-            <tr><td>压缩机三相电流</td><td>相线(电流钳)</td><td class="v">三相均衡</td><td class="v">U相偏大</td><td class="bad">不平衡</td></tr>
-            <tr><td>PTC 加热器电阻</td><td>PTC 插头两端</td><td class="v">1 ~ 5 Ω</td><td class="v">3.1 Ω</td><td class="ok">正常</td></tr>
-            <tr><td>互锁回路电阻</td><td>HVIL 监测端</td><td class="v">&lt; 1 Ω</td><td class="v">0.3 Ω</td><td class="ok">正常</td></tr>
-            <tr><td>传感器 5V 参考</td><td>压力传感器 1 脚</td><td class="v">4.9 ~ 5.1 V</td><td class="v">5.02 V</td><td class="ok">正常</td></tr>
-            <tr><td>CAN 网络电阻</td><td>OBD 6/14 引脚</td><td class="v">≈ 60 Ω</td><td class="v">61 Ω</td><td class="ok">正常</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p><b>中心线电压说明：</b>电动压缩机内部为三相电机，其三相绕组中性点（中心线）电压应约等于母线电压的一半且稳定。若出现<b class="hl">三相不平衡</b>，说明电机绕组存在匝间短路、断路或不同程度匝间绝缘劣化，是判断<b class="bad">电机损坏</b>的关键依据。</p>
-    </div>
-
-    <div class="sec">
-      <h2>步骤 4 · 结果书写清晰</h2>
-      <div class="card">
-        <div class="step"><div class="num">1</div><div class="body">每个测量值必须标注<b>测量点、使用仪表、单位、实测值、参考值、判定结论</b>六要素，禁止只写"正常/不正常"；</div></div>
-        <div class="step"><div class="num">2</div><div class="body">结论采用<b class="hl">「现象 → 数据 → 判断 → 原因」</b>的因果链条书写，让复核人员无需现场即可复现推理；</div></div>
-        <div class="step"><div class="num">3</div><div class="body">对异常数据用<span class="ok">绿色</span>标正常、<span class="bad">红色</span>标异常，并附一句说明（如上表所示）。</div></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ================= 功能二：电路图与原理分析 ================= -->
-<section id="view-circuit" class="view">
-  <div class="wrap">
-    <div class="doc-head">
-      <span class="kicker">功能二 · 电路图 + 文字说明</span>
-      <h1>电路查阅 · 故障点标注 · 原理分析</h1>
-      <p>本部分查阅并绘制空调系统关键电路，标注故障点位置（<span class="bad">线路断裂</span>、<span class="hl">电机损坏</span>），并给出故障排除结果、最终原因与失效原理。</p>
-    </div>
-
-    <div class="sec">
-      <h2>一、电路资料查阅</h2>
-      <p>本次查阅该车型空调系统的 5 张关联电路图：<b>①压缩机驱动电路、②PTC 加热电路、③高压互锁回路、④传感器电路、⑤控制与通信电路</b>。唤醒/控制逻辑、熔断器与继电器编号、插接件针脚以维修手册对应章节为准。</p>
-    </div>
-
-    <div class="sec">
-      <h2>二、电路图绘制与故障点标注</h2>
-
-      <figure class="fig">
-        <img src="images/sch1_compressor.png" alt="压缩机驱动电路">
-        <figcaption><span class="ft">图 1 · 压缩机驱动电路。</span>动力电池高压直流经熔断器 FU、主接触器 KM 进入三相逆变桥，逆变为三相交流驱动压缩机电机；控制板通过 CAN_H/CAN_L 与整车控制器通信。<br>
-        <span class="fp"><span class="pin r"></span><span><b class="bad">故障点 A — 线路断裂：</b>三相逆变桥输出相线、CAN 通信线一旦断裂，会导致缺相、通信丢失，控制器报码停机。</span></span>
-        <span class="fp"><span class="pin o"></span><span><b class="hl">故障点 B — 电机损坏：</b>压缩机电机绕组匝间短路/断路（标注于电机符号处），三相电流不平衡，触发过流保护。</span></span></figcaption>
-      </figure>
-
-      <figure class="fig">
-        <img src="images/sch2_ptc.png" alt="PTC 加热电路">
-        <figcaption><span class="ft">图 2 · PTC 加热电路。</span>保险丝 + 双继电器（K1/K2）冗余控制，为 PTC 发热体供电，实现制热。<br>
-        <span class="fp"><span class="pin r"></span><span><b class="bad">线路断裂/熔断：</b>保险丝熔断、PTC 供电线路断裂或继电器触点烧蚀，均会使 PTC 无法得电。</span></span>
-        <span class="fp"><span class="pin o"></span><span><b class="hl">部件损坏：</b>PTC 发热体本体断路或短路（正常电阻 1~5 Ω）。</span></span></figcaption>
-      </figure>
-
-      <figure class="fig">
-        <img src="images/sch3_hvil.png" alt="高压互锁回路">
-        <figcaption><span class="ft">图 3 · 高压互锁回路。</span>各高压接插件（电池/压缩机/PTC/电机）的互锁线串联成回路，任一点断开即整车禁止高压输出。<br>
-        <span class="fp"><span class="pin r"></span><span><b class="bad">故障点 A — 线路断裂：</b>任一高压接插件松动、脱落或互锁线断裂，回路开路（电阻无穷大，正常 &lt;1 Ω）。</span></span></figcaption>
-      </figure>
-
-      <figure class="fig">
-        <img src="images/sch4_sensor.png" alt="传感器电路">
-        <figcaption><span class="ft">图 4 · 传感器电路。</span>三线制制冷剂压力传感器（5V 参考/信号/地）+ 蒸发器温度传感器（NTC），控制器内部上拉采样。<br>
-        <span class="fp"><span class="pin r"></span><span><b class="bad">故障点 A — 线路断裂：</b>信号线断裂或地线虚接，导致信号电压异常，压缩机频繁启停或不停机。</span></span></figcaption>
-      </figure>
-
-      <figure class="fig">
-        <img src="images/sch5_control.png" alt="控制与通信电路">
-        <figcaption><span class="ft">图 5 · 控制与通信电路。</span>CAN 总线、控制单元与执行器之间的控制线路，实现整车对压缩机的转速指令与状态反馈。<br>
-        <span class="fp"><span class="pin r"></span><span><b class="bad">故障点 A — 线路断裂：</b>CAN_H/CAN_L 断裂或控制线路开路，导致通信丢失（如 B14200），压缩机无法启动。</span></span></figcaption>
-      </figure>
-    </div>
-
-    <div class="sec">
-      <h2>三、故障排除结果</h2>
-      <div class="card">
-        <p>依据数据判定，本例故障定位为：<b class="hl">压缩机电机绕组匝间短路</b>（高压、低压压力异常 + 三相电流不平衡 + 中心线电压失衡），并伴有<span class="bad">三相逆变桥输出相线插头端子烧蚀松脱</span>（相当于线路断裂）。</p>
-        <p>修复措施：更换同型号电动压缩机总成 → 修复/更换烧蚀端子与线束 → 对制冷剂回路抽真空保压、按铭牌定量加注 → 清除故障码并路试。<b class="ok">修复后系统恢复正常，故障码不再复现。</b></p>
-      </div>
-    </div>
-
-    <div class="sec">
-      <h2>四、最终故障原因与原理分析</h2>
-      <div class="conclude">
-        <p><b class="hl">最终故障原因：</b>压缩机电机定子绕组匝间绝缘劣化，导致匝间短路；长期大电流使相线端子过热烧蚀、产生接触不良（局部断线）。</p>
-        <p><b class="hl">失效原理：</b></p>
-        <p>① <b>电机匝间短路</b> → 三相绕组阻抗不平衡 → 三相电流不均衡、中心线电压偏移；控制器检测到<b>过流/缺相</b>后进入保护，<b>停止压缩机输出</b> → 制冷剂不再循环，系统丧失制冷能力，表现为「高压偏低、低压偏高、完全/间歇不制冷」。</p>
-        <p>② <b>相线端子过热烧蚀</b> → 接触电阻增大 → 局部相当于<b>线路断裂</b> → 进一步加剧缺相与发热，与绕组短路互为因果，最终导致压缩机彻底停转。</p>
-        <p>③ 同理，若为<b>线路断裂型</b>故障（如互锁线断、CAN 线断、传感器信号线断），则是「信号/供电中断 → 保护停机或误判」这一失效链路，同样造成系统功能丧失。</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ================= 功能三：动画演示 ================= -->
-<section id="view-anim" class="view">
-  <iframe src="anim.html" title="新能源汽车空调系统 3D 动画" loading="eager"></iframe>
-</section>
 
 <script>
   (function(){
-    var btns = document.querySelectorAll('.mbtn');
+    var btns = document.querySelectorAll('.dbtn');
     var views = document.querySelectorAll('.view');
-    function activate(name){
+    var topTitle = document.getElementById('topTitle');
+    function activate(name, title){
       btns.forEach(function(b){ b.classList.toggle('active', b.dataset.view === name); });
       views.forEach(function(v){ v.classList.remove('active'); });
       var el = document.getElementById('view-' + name);
       if(el) el.classList.add('active');
+      if(topTitle && title) topTitle.textContent = title;
     }
     btns.forEach(function(b){
-      b.addEventListener('click', function(){ activate(b.dataset.view); });
+      b.addEventListener('click', function(){ activate(b.dataset.view, b.dataset.title); });
     });
+    // 设置初始标题
+    var first = document.querySelector('.dbtn.active');
+    if(first && topTitle) topTitle.textContent = first.dataset.title;
   })();
 </script>
 </body>
